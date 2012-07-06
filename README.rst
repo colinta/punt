@@ -2,8 +2,9 @@
 punt
 ====
 
-I saw kicker_ the other day and thought: I could write that in a minute!  So
-I did.
+I saw kicker_ the other day and thought: I could write that in a minute!
+
+So I did.
 
 ------------
 INSTALLATION
@@ -19,12 +20,12 @@ USAGE
 
 ::
 
-    $ punt 'du -sh'      # list file sizes, update the list when a file changes
-    $ punt --help        # usage
+    $ punt 'du -sh'  # list file sizes, update the list when a file changes
+    $ punt --help
     $ punt --version
-    $ punt -w tests -r 'py.test'  # run py.test when any file in tests/ changes
-    $ punt --watch ~ --recursive ls 'ls -la'  # options
-    $ punt -w ~ -r ls 'ls -la'                # same, but short names
+    $ punt -w tests 'py.test'  # run py.test when any file in tests/ changes
+    $ punt --watch ~ --local 'ls -la'  # options
+    $ punt -w ~ -l 'ls -la'            # same, but short names
 
 
 -------
