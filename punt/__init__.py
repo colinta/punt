@@ -23,7 +23,7 @@ from watchdog.events import FileSystemEventHandler
 
 
 def run():
-    arguments = docopt(__doc__, version='punt v1.3')
+    arguments = docopt(__doc__, version='punt v1.4')
 
     if arguments['--watch'] == 'current directory':
         watch_path = os.getcwd()
@@ -45,7 +45,9 @@ def run():
 
             try:
                 for command in commands:
+                    print "Running {command}".format(**locals())
                     call(command, shell=True)
+                    print "...done with {command}".format(**locals())
             except OSError as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stderr)
