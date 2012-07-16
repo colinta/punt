@@ -44,10 +44,9 @@ def run():
                 return
 
             try:
+                print "Running..."
                 for command in commands:
-                    print "Running {command}".format(**locals())
                     call(command, shell=True)
-                    print "...done with {command}".format(**locals())
             except OSError as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stderr)
