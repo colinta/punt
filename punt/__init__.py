@@ -44,9 +44,13 @@ def run():
                 return
 
             try:
-                print "Running..."
                 for command in commands:
+                    desc = command.splitlines()[0]
+                    if "\n" in command:
+                        desc += "..."
+                    print "Running {0}".format(desc)
                     call(command, shell=True)
+                print "...done."
             except OSError as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stderr)
