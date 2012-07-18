@@ -23,7 +23,7 @@ from watchdog.events import FileSystemEventHandler
 
 
 def run():
-    arguments = docopt(__doc__, version='punt v1.4')
+    arguments = docopt(__doc__, version='punt v1.7')
 
     if arguments['--watch'] == 'current directory':
         watch_path = os.getcwd()
