@@ -2,13 +2,13 @@
 command(s) when a change is detected.  Uses watchdog to track file changes.
 
 Usage:
-    punt [options] <commands>...
+    punt [-w <path> ...] [-l] <commands>...
     punt (-h | --help)
     punt --version
 
 Options:
-    -w <path>, --watch <path>       Which path to watch [default: current directory]
-    -l, --local                     Only tracks local files (disables recusive)
+    -w <path> ...  Which path(s) to watch [default: current directory]
+    -l             Only tracks local files (disables recusive)
 """
 import time
 import sys
@@ -25,15 +25,17 @@ from watchdog.events import FileSystemEventHandler
 def run():
     arguments = docopt(__doc__, version='punt v1.7')
 
-    if arguments['--watch'] == 'current directory':
-        watch_path = os.getcwd()
+    if not arguments['-w']:
+        watch_paths = [os.getcwd()]
     else:
-        watch_path = os.path.abspath(arguments['--watch'])
+        watch_paths = []
+        for watch in arguments['-w']:
+            watch = os.path.abspath(watch)
+            if not os.path.isdir(watch):
+                sys.stderr.write("Error: {watch} does not exist".format(watch=watch))
+            watch_paths.append(watch)
 
-    if not os.path.isdir(watch_path):
-        sys.stderr.write("Error: {watch_path} does not exist".format(watch_path=watch_path))
-
-    recursive = not arguments['--local']
+    recursive = not arguments['-l']
     commands = arguments['<commands>']
 
     class Regenerate(FileSystemEventHandler):
@@ -60,8 +62,9 @@ def run():
     observer = Observer()
     handler = Regenerate()
 
-    sys.stderr.write('Watching "%s" for changes\n' % watch_path)
-    observer.schedule(handler, path=watch_path, recursive=recursive)
+    sys.stderr.write('Watching %s for changes\n' % ', '.join(watch_paths))
+    for watch in watch_paths:
+        observer.schedule(handler, path=watch, recursive=recursive)
     observer.start()
 
     try:
