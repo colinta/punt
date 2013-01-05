@@ -7,7 +7,7 @@ Usage:
     punt --version
 
 Options:
-    -w <path> ...  Which path(s) to watch [default: current directory]
+    -w <path> ...  Which path(s) to watch
     -l             Only tracks local files (disables recusive)
 """
 import time
@@ -23,7 +23,7 @@ from watchdog.events import FileSystemEventHandler
 
 
 def run():
-    arguments = docopt(__doc__, version='punt v1.8.1')
+    arguments = docopt(__doc__, version='punt v1.8.2')
 
     if not arguments['-w']:
         watch_paths = [os.getcwd()]
