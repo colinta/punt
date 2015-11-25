@@ -9,9 +9,9 @@ def read(fname):
 
 setup(
         name="punt",
-        version="v1.8.2",
-        author="Colin Thomas-Arnold",
-        author_email="colinta@gmail",
+        version="v1.8.3",
+        author="Colin T.A. Gray",
+        author_email="colinta@gmail.com",
         url="https://github.com/colinta/punt",
         install_requires=['docopt', 'watchdog'],
 
@@ -21,7 +21,7 @@ setup(
             ]
         },
 
-        description="A straightforward python static site generator.",
+        description="Monitor file changes, and run script on changes.",
         long_description=read("README.rst"),
 
         packages=find_packages(),
