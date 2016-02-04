@@ -22,9 +22,12 @@ from docopt import docopt
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+import pkg_resources  # part of setuptools
+version = pkg_resources.require("punt")[0].version
+
 
 def run():
-    arguments = docopt(__doc__, version='punt v1.9.1')
+    arguments = docopt(__doc__, version='punt ' + version)
 
     if not arguments['-w']:
         watch_paths = [os.getcwd()]
@@ -37,7 +40,11 @@ def run():
             watch_paths.append(watch)
 
     recursive = not arguments['-l']
-    timeout = arguments['-t']
+    try:
+        timeout = float(arguments['-t'])
+    except ValueError:
+        sys.stderr.write("Error: 'timeout' must be a number\n")
+        return
     commands = arguments['<commands>']
 
     class Regenerate(FileSystemEventHandler):

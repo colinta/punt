@@ -9,7 +9,7 @@ def read(fname):
 
 setup(
         name="punt",
-        version="v1.9.1",
+        version="v1.9.2",
         author="Colin T.A. Gray",
         author_email="colinta@gmail.com",
         url="https://github.com/colinta/punt",
