@@ -2,11 +2,12 @@
 command(s) when a change is detected.  Uses watchdog to track file changes.
 
 Usage:
-    punt [-w <path> ...] [-l] <commands>...
+    punt [-w <path> ...] [-l] [-t 5] <commands>...
     punt (-h | --help)
     punt --version
 
 Options:
+    -t <time>      Minimum time to delay between consecutive runs [default: 1]
     -w <path> ...  Which path(s) to watch
     -l             Only tracks local files (disables recusive)
 """
@@ -36,14 +37,16 @@ def run():
             watch_paths.append(watch)
 
     recursive = not arguments['-l']
+    timeout = arguments['-t']
     commands = arguments['<commands>']
 
     class Regenerate(FileSystemEventHandler):
         last_run = None
 
         def on_any_event(self, event, alert=True):
-            if self.last_run and time.time() - self.last_run < .1:
+            if self.last_run and time.time() - self.last_run < timeout:
                 return
+            self.last_run = time.time()
 
             try:
                 for command in commands:
@@ -57,7 +60,6 @@ def run():
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stderr)
                 sys.stderr.write("Error (%s): %s\n" % (type(e).__name__, e.message))
-            self.last_run = time.time()
 
     observer = Observer()
     handler = Regenerate()
