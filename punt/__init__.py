@@ -56,6 +56,7 @@ def run():
             self.last_run = time.time()
 
             try:
+                print("\033[2J\033[H\033[3J", end='')
                 for command in commands:
                     desc = command.splitlines()[0]
                     if "\n" in command:
