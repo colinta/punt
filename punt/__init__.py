@@ -35,7 +35,7 @@ def run():
         watch_paths = []
         for watch in arguments['-w']:
             watch = os.path.abspath(watch)
-            if not os.path.isdir(watch):
+            if not os.path.isfile(watch):
                 sys.stderr.write("Error: {watch} does not exist".format(watch=watch))
             watch_paths.append(watch)
 
