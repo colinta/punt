@@ -56,14 +56,15 @@ def run():
             self.last_run = time.time()
 
             try:
-                print("\033[2J\033[H\033[3J", end='')
+                sys.stderr.write("\033[2J\033[H\033[3J")
+                sys.stderr.write('Watching %s for changes\n' % ', '.join(watch_paths))
                 for command in commands:
                     desc = command.splitlines()[0]
                     if "\n" in command:
                         desc += "..."
-                    print("Running {0}".format(desc))
+                    sys.stderr.write("Running {0}\n".format(desc))
                     call(command, shell=True)
-                print("...done.")
+                sys.stderr.write("...done.\n")
             except OSError as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stderr)
@@ -72,13 +73,11 @@ def run():
     observer = Observer()
     handler = Regenerate()
 
-    sys.stderr.write('Watching %s for changes\n' % ', '.join(watch_paths))
     for watch in watch_paths:
         observer.schedule(handler, path=watch, recursive=recursive)
     observer.start()
 
     try:
-        sys.stderr.write('Listening...\n')
         handler.on_any_event(None, False)  # run the first time, no alert
         while True:
             time.sleep(1)
