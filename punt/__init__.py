@@ -2,14 +2,14 @@
 command(s) when a change is detected.  Uses watchdog to track file changes.
 
 Usage:
-    punt [-q | --quiet] [-w <path> ...] [-l] [-t 5] <commands>...
+    punt [-i | --info] [-w <path> ...] [-l] [-t 5] <commands>...
     punt (-h | --help)
     punt --version
 
 Options:
     -t <time>      Minimum time to delay between consecutive runs [default: 1]
     -w <path> ...  Which path(s) to watch
-    -q --quiet     Only show command output
+    -i --info      Show command info
     -l             Only tracks local files (disables recusive)
 """
 import time
@@ -32,7 +32,7 @@ shell = shell.stdout.decode('utf-8').strip()
 def run():
     arguments = docopt(__doc__, version='punt ' + version)
 
-    quiet = arguments['--quiet']
+    info = arguments['--info']
 
     if not arguments['-w']:
         watch_paths = [os.getcwd()]
@@ -64,20 +64,20 @@ def run():
             try:
                 sys.stderr.write("\033[2J\033[H\033[3J")
                 sys.stderr.flush()
-                if not quiet:
+                if info:
                     sys.stderr.write('Watching %s for changes\n' % ', '.join(watch_paths))
 
                 for command in commands:
                     desc = command.splitlines()[0]
                     if "\n" in command:
                         desc += "..."
-                    if not quiet:
+                    if info:
                         sys.stderr.write("Running {0}\n".format(desc))
                     if os.path.isfile(puntrc):
                         command = f'source {puntrc} ; {command}'
                     call(command, shell=True, executable=shell)
-                if not quiet:
-                    sys.stderr.write("...done.\n")
+                if info:
+                    sys.stderr.write("\x1B[1mdone.\x1B[0m\n")
             except OSError as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stderr)
@@ -95,7 +95,7 @@ def run():
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        if not quiet:
+        if info:
             sys.stderr.write('!!! Stopping\n')
         observer.stop()
     observer.join()
