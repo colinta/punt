@@ -2,13 +2,14 @@
 command(s) when a change is detected.  Uses watchdog to track file changes.
 
 Usage:
-    punt [-w <path> ...] [-l] [-t 5] <commands>...
+    punt [-q | --quiet] [-w <path> ...] [-l] [-t 5] <commands>...
     punt (-h | --help)
     punt --version
 
 Options:
     -t <time>      Minimum time to delay between consecutive runs [default: 1]
     -w <path> ...  Which path(s) to watch
+    -q --quiet     Only show command output
     -l             Only tracks local files (disables recusive)
 """
 import time
@@ -16,7 +17,7 @@ import sys
 import os
 import os.path
 import traceback
-from subprocess import call
+from subprocess import (call, run)
 
 from docopt import docopt
 from watchdog.observers import Observer
@@ -24,10 +25,14 @@ from watchdog.events import FileSystemEventHandler
 
 import pkg_resources  # part of setuptools
 version = pkg_resources.require("punt")[0].version
-
+puntrc = os.path.expanduser('~/.puntrc')
+shell = run('echo $SHELL', shell=True, capture_output=True)
+shell = shell.stdout.decode('utf-8').strip()
 
 def run():
     arguments = docopt(__doc__, version='punt ' + version)
+
+    quiet = arguments['--quiet']
 
     if not arguments['-w']:
         watch_paths = [os.getcwd()]
@@ -45,6 +50,7 @@ def run():
     except ValueError:
         sys.stderr.write("Error: 'timeout' must be a number\n")
         return
+
     commands = arguments['<commands>']
 
     class Regenerate(FileSystemEventHandler):
@@ -57,14 +63,21 @@ def run():
 
             try:
                 sys.stderr.write("\033[2J\033[H\033[3J")
-                sys.stderr.write('Watching %s for changes\n' % ', '.join(watch_paths))
+                sys.stderr.flush()
+                if not quiet:
+                    sys.stderr.write('Watching %s for changes\n' % ', '.join(watch_paths))
+
                 for command in commands:
                     desc = command.splitlines()[0]
                     if "\n" in command:
                         desc += "..."
-                    sys.stderr.write("Running {0}\n".format(desc))
-                    call(command, shell=True)
-                sys.stderr.write("...done.\n")
+                    if not quiet:
+                        sys.stderr.write("Running {0}\n".format(desc))
+                    if os.path.isfile(puntrc):
+                        command = f'source {puntrc} ; {command}'
+                    call(command, shell=True, executable=shell)
+                if not quiet:
+                    sys.stderr.write("...done.\n")
             except OSError as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stderr)
@@ -82,7 +95,8 @@ def run():
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        sys.stderr.write('!!! Stopping\n')
+        if not quiet:
+            sys.stderr.write('!!! Stopping\n')
         observer.stop()
     observer.join()
 
