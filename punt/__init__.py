@@ -17,6 +17,7 @@ import sys
 import os
 import os.path
 import traceback
+import glob
 from subprocess import (call, run)
 
 from docopt import docopt
@@ -41,8 +42,14 @@ def run():
         for watch in arguments['-w']:
             watch = os.path.abspath(watch)
             if not os.path.isfile(watch):
-                sys.stderr.write("Error: {watch} does not exist".format(watch=watch))
-            watch_paths.append(watch)
+                paths = glob.glob(watch, recursive=True)
+                if not paths:
+                    sys.stderr.write("Error: {watch} does not exist\n".format(watch=watch))
+                    return
+                for path in paths:
+                    watch_paths.append(path)
+            else:
+                watch_paths.append(watch)
 
     recursive = not arguments['-l']
     try:
