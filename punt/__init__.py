@@ -30,6 +30,14 @@ puntrc = os.path.expanduser('~/.puntrc')
 shell = run('echo $SHELL', shell=True, capture_output=True)
 shell = shell.stdout.decode('utf-8').strip()
 
+def write_status(status, command=None):
+    command = command or "punt"
+
+    if status == 0:
+        sys.stderr.write("\x1B[32;2m`" + command + "` -> 0\x1B[0m\n")
+    else:
+        sys.stderr.write("\x1B[31;2m`" + command + "` -> " + str(status) + "\x1B[0m\n")
+
 def run():
     arguments = docopt(__doc__, version='punt ' + version)
 
@@ -71,20 +79,28 @@ def run():
             try:
                 sys.stderr.write("\033[2J\033[H\033[3J")
                 sys.stderr.flush()
-                if info:
-                    sys.stderr.write('Watching %s for changes\n' % ', '.join(watch_paths))
 
+                last_status = None
+                statuses = {}
                 for command in commands:
                     desc = command.splitlines()[0]
                     if "\n" in command:
                         desc += "..."
+
                     if info:
                         sys.stderr.write("Running {0}\n".format(desc))
+
                     if os.path.isfile(puntrc):
                         command = f'source {puntrc} ; {command}'
-                    call(command, shell=True, executable=shell)
+
+                    last_status = call(command, shell=True, executable=shell)
+                    statuses[command] = last_status
+
                 if info:
-                    sys.stderr.write("\x1B[1mdone.\x1B[0m\n")
+                    for command in commands:
+                        status = statuses[command]
+                        write_status(status, command=command)
+
             except OSError as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stderr)
