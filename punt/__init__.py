@@ -2,13 +2,13 @@
 command(s) when a change is detected.  Uses watchdog to track file changes.
 
 Usage:
-    punt [-i | --info] [-w <path> ...] [-l] [-t 5] <commands>...
+    punt [-i | --info] [-w <path> ...] [-l] [-t 5] [--] <commands>...
     punt (-h | --help)
     punt --version
 
 Options:
     -t <time>      Minimum time to delay between consecutive runs [default: 1]
-    -w <path> ...  Which path(s) to watch
+    -w <path>      Which path(s) to watch. Glob patterns are supported, multiple -w flags are supported.
     -i --info      Show command info
     -l             Only tracks local files (disables recusive)
 """
@@ -30,23 +30,38 @@ puntrc = os.path.expanduser('~/.puntrc')
 shell = run('echo $SHELL', shell=True, capture_output=True)
 shell = shell.stdout.decode('utf-8').strip()
 
-def write_status(status, command=None):
-    command = command or "punt"
+class Command:
+    def __init__(self, command, puntrc):
+        self.command = command
+        self.puntrc = puntrc
 
+    def desc(self):
+        desc = self.command.splitlines()[0]
+        if "\n" in self.command:
+            desc += "..."
+        return desc
+
+    def run(self, shell):
+        command = self.command
+        if os.path.isfile(self.puntrc):
+            command = f'source {puntrc} ; {command}'
+        return call(command, shell=True, executable=shell)
+
+
+def write_status(status, command):
     if status == 0:
-        sys.stderr.write("\x1B[32;2m`" + command + "` -> 0\x1B[0m\n")
+        sys.stderr.write("\x1B[32;2m`" + command.desc() + "` -> 0\x1B[0m\n")
     else:
-        sys.stderr.write("\x1B[31;2m`" + command + "` -> " + str(status) + "\x1B[0m\n")
+        sys.stderr.write("\x1B[31;2m`" + command.desc() + "` -> " + str(status) + "\x1B[0m\n")
 
 def run():
     arguments = docopt(__doc__, version='punt ' + version)
-
     info = arguments['--info']
+    watch_paths = []
 
     if not arguments['-w']:
-        watch_paths = [os.getcwd()]
+        watch_paths.append(os.getcwd())
     else:
-        watch_paths = []
         for watch in arguments['-w']:
             watch = os.path.abspath(watch)
             if not os.path.isfile(watch):
@@ -66,7 +81,10 @@ def run():
         sys.stderr.write("Error: 'timeout' must be a number\n")
         return
 
-    commands = arguments['<commands>']
+    commands = list(map(
+        lambda c: Command(c, puntrc),
+        arguments['<commands>'],
+    ))
 
     class Regenerate(FileSystemEventHandler):
         last_run = None
@@ -83,17 +101,12 @@ def run():
                 last_status = None
                 statuses = {}
                 for command in commands:
-                    desc = command.splitlines()[0]
-                    if "\n" in command:
-                        desc += "..."
+                    desc = command.desc()
 
                     if info:
-                        sys.stderr.write("Running {0}\n".format(desc))
+                        sys.stderr.write("\x1B[34;2mRunning {0}\x1B[0m\n".format(desc))
 
-                    if os.path.isfile(puntrc):
-                        command = f'source {puntrc} ; {command}'
-
-                    last_status = call(command, shell=True, executable=shell)
+                    last_status = command.run(shell)
                     statuses[command] = last_status
 
                 if info:
