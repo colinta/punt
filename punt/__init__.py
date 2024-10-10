@@ -12,23 +12,26 @@ Options:
     -i --info      Show command info
     -l             Only tracks local files (disables recusive)
 """
+
 import time
 import sys
 import os
 import os.path
 import traceback
 import glob
-from subprocess import (call, run)
+from subprocess import call, run
 
 from docopt import docopt
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 import pkg_resources  # part of setuptools
+
 version = pkg_resources.require("punt")[0].version
-puntrc = os.path.expanduser('~/.puntrc')
-shell = run('echo $SHELL', shell=True, capture_output=True)
-shell = shell.stdout.decode('utf-8').strip()
+puntrc = os.path.expanduser("~/.puntrc")
+shell = run("echo $SHELL", shell=True, capture_output=True)
+shell = shell.stdout.decode("utf-8").strip()
+
 
 class Command:
     def __init__(self, command, puntrc):
@@ -44,7 +47,7 @@ class Command:
     def run(self, shell):
         command = self.command
         if os.path.isfile(self.puntrc):
-            command = f'source {puntrc} ; {command}'
+            command = f"source {puntrc} ; {command}"
         return call(command, shell=True, executable=shell)
 
 
@@ -52,39 +55,46 @@ def write_status(status, command):
     if status == 0:
         sys.stderr.write("\x1B[32;2m`" + command.desc() + "` -> 0\x1B[0m\n")
     else:
-        sys.stderr.write("\x1B[31;2m`" + command.desc() + "` -> " + str(status) + "\x1B[0m\n")
+        sys.stderr.write(
+            "\x1B[31;2m`" + command.desc() + "` -> " + str(status) + "\x1B[0m\n"
+        )
+
 
 def run():
-    arguments = docopt(__doc__, version='punt ' + version)
-    info = arguments['--info']
+    arguments = docopt(__doc__, version="punt " + version)
+    info = arguments["--info"]
     watch_paths = []
 
-    if not arguments['-w']:
+    if not arguments["-w"]:
         watch_paths.append(os.getcwd())
     else:
-        for watch in arguments['-w']:
+        for watch in arguments["-w"]:
             watch = os.path.abspath(watch)
             if not os.path.isfile(watch):
                 paths = glob.glob(watch, recursive=True)
                 if not paths:
-                    sys.stderr.write("Error: {watch} does not exist\n".format(watch=watch))
+                    sys.stderr.write(
+                        "Error: {watch} does not exist\n".format(watch=watch)
+                    )
                     return
                 for path in paths:
                     watch_paths.append(path)
             else:
                 watch_paths.append(watch)
 
-    recursive = not arguments['-l']
+    recursive = not arguments["-l"]
     try:
-        timeout = float(arguments['-t'])
+        timeout = float(arguments["-t"])
     except ValueError:
         sys.stderr.write("Error: 'timeout' must be a number\n")
         return
 
-    commands = list(map(
-        lambda c: Command(c, puntrc),
-        arguments['<commands>'],
-    ))
+    commands = list(
+        map(
+            lambda c: Command(c, puntrc),
+            arguments["<commands>"],
+        )
+    )
 
     class Regenerate(FileSystemEventHandler):
         last_run = None
@@ -116,7 +126,9 @@ def run():
 
             except OSError as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
-                traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stderr)
+                traceback.print_exception(
+                    exc_type, exc_value, exc_traceback, file=sys.stderr
+                )
                 sys.stderr.write("Error (%s): %s\n" % (type(e).__name__, e.message))
 
     observer = Observer()
@@ -132,9 +144,10 @@ def run():
             time.sleep(1)
     except KeyboardInterrupt:
         if info:
-            sys.stderr.write('!!! Stopping\n')
+            sys.stderr.write("!!! Stopping\n")
         observer.stop()
     observer.join()
+
 
 if __name__ == "__main__":
     run()
