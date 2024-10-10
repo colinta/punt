@@ -123,6 +123,7 @@ def run():
                     for command in commands:
                         status = statuses[command]
                         write_status(status, command=command)
+                    sys.stderr.write(f"\x1B[33;2mat {time.time()}\x1B[0m\n")
 
             except OSError as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
