@@ -20,10 +20,11 @@ USAGE
 
 ::
 
-    $ punt 'du -sh'  # list file sizes, update the list when a file in cwd changes
-    $ punt -w tests 'py.test'          # run py.test when any file in tests/ changes
-    $ punt -w tests -w lib 'py.test'   # run py.test when any file in tests/ or lib/ changes
-    $ punt -l make                     # only monitor "local" files (don't observe subdirectories)
+    $ punt 'du -sh'                   # list file sizes, update the list when a file in cwd changes
+    $ punt -w tests/ -w lib/ py.test  # run py.test when any file in tests/ or lib/ changes
+    $ punt -w info.yml py.test        # run py.test when info.yml changes
+    $ punt -l make                    # only monitor "local" files (don't observe subdirectories)
+    $ punt --info -w src make         # show info like command status
     $ punt --help
     $ punt --version
 

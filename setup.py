@@ -9,7 +9,7 @@ def read(fname):
 
 setup(
         name="punt",
-        version="v1.11.0",
+        version="v1.12.0",
         author="Colin T.A. Gray",
         author_email="colinta@gmail.com",
         url="https://github.com/colinta/punt",
@@ -30,7 +30,7 @@ setup(
         license="BSD",
         classifiers=[
             "Programming Language :: Python",
-            "Development Status :: 4 - Beta",
+            "Development Status :: 5 - Production/Stable",
             'Environment :: Console',
             "License :: OSI Approved :: BSD License",
             "Operating System :: OS Independent",
