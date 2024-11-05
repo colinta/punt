@@ -12,7 +12,7 @@ Options:
     -i --info      Show command info
     -l             Only tracks local files (disables recusive)
 """
-
+import datetime
 import time
 import sys
 import os
@@ -123,7 +123,8 @@ def run():
                     for command in commands:
                         status = statuses[command]
                         write_status(status, command=command)
-                    sys.stderr.write(f"\x1B[33;2mat {time.time()}\x1B[0m\n")
+                    clock = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+                    sys.stderr.write(f"\x1B[33;2mat {clock}\x1B[0m\n")
 
             except OSError as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
