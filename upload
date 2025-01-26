@@ -4,4 +4,4 @@ python3 -m twine upload --repository testpypi dist/*
 echo
 echo -n "Uploaded to testpypi, ready to upload 'for real'… [press enter]"
 read
-PYPI_TOKEN=$(<~/.pypi_token) python3 -m twine upload dist/*
+python3 -m twine upload -r punt dist/*

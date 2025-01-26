@@ -9,7 +9,7 @@ def read(fname):
 
 setup(
         name="punt",
-        version="v1.13.0",
+        version="v1.13.1",
         author="Colin T.A. Gray",
         author_email="colinta@gmail.com",
         url="https://github.com/colinta/punt",
@@ -17,7 +17,7 @@ setup(
 
         entry_points={
             'console_scripts': [
-                'punt = punt:run'
+                'punt = punt:main'
             ]
         },
 

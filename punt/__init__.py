@@ -25,9 +25,9 @@ from docopt import docopt
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-import pkg_resources  # part of setuptools
+import importlib.metadata
 
-version = pkg_resources.require("punt")[0].version
+version = importlib.metadata.version("punt")
 puntrc = os.path.expanduser("~/.puntrc")
 shell = run("echo $SHELL", shell=True, capture_output=True)
 shell = shell.stdout.decode("utf-8").strip()
@@ -60,7 +60,7 @@ def write_status(status, command):
         )
 
 
-def run():
+def main():
     arguments = docopt(__doc__, version="punt " + version)
     info = arguments["--info"]
     watch_paths = []
@@ -152,4 +152,4 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    main()
