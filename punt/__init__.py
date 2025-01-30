@@ -2,14 +2,16 @@
 command(s) when a change is detected.  Uses watchdog to track file changes.
 
 Usage:
-    punt [-i | --info] [-w <path> ...] [-l] [-t 5] [--] <commands>...
+    punt [-i | --info] [-k | --keep] [-w <path> ...] [-l] [-t 5] [--] <commands>...
     punt (-h | --help)
+    punt (-k | --keep)
     punt --version
 
 Options:
     -t <time>      Minimum time to delay between consecutive runs [default: 1]
     -w <path>      Which path(s) to watch. Glob patterns are supported, multiple -w flags are supported.
     -i --info      Show command info
+    -k --keep      Do not clear terminal between runs [default: false]
     -l             Only tracks local files (disables recusive)
 """
 import datetime
@@ -63,6 +65,7 @@ def write_status(status, command):
 def main():
     arguments = docopt(__doc__, version="punt " + version)
     info = arguments["--info"]
+    keep = arguments["--keep"]
     watch_paths = []
 
     if not arguments["-w"]:
@@ -105,8 +108,9 @@ def main():
             self.last_run = time.time()
 
             try:
-                sys.stderr.write("\033[2J\033[H\033[3J")
-                sys.stderr.flush()
+                if not keep:
+                    sys.stderr.write("\033[2J\033[H\033[3J")
+                    sys.stderr.flush()
 
                 last_status = None
                 statuses = {}
