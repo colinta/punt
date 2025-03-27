@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "punt"
+version = "1.13.1"
+authors = [
+    {name = "Colin T.A. Gray", email = "colinta@gmail.com"},
+]
+description = "Monitor file changes, and run script on changes."
+readme = "README.rst"
+requires-python = ">=3.7"
+license = {text = "BSD"}
+classifiers = [
+    "Programming Language :: Python",
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Topic :: Software Development",
+]
+keywords = ["terminal", "command", "shell"]
+dependencies = [
+    "docopt==0.6.2",
+    "watchdog==2.0.2",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/colinta/punt"
+"Bug Tracker" = "https://github.com/colinta/punt/issues"
+
+[project.scripts]
+punt = "punt:main"
+
+[tool.setuptools]
+packages = ["punt"]
