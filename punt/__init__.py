@@ -112,6 +112,12 @@ def main():
                     sys.stderr.write("\033[2J\033[H\033[3J")
                     sys.stderr.flush()
 
+                # Display which file changed if info flag is active
+                if info and event is not None:
+                    file_path = event.src_path
+                    event_type = event.event_type
+                    sys.stderr.write(f"\x1B[36;2mFile {event_type}: {file_path}\x1B[0m\n")
+
                 last_status = None
                 statuses = {}
                 for command in commands:

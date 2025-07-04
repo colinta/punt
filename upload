@@ -6,11 +6,7 @@ rm -rf dist/ build/ *.egg-info
 
 # Build source distribution and wheel
 python3 -m build
-
-# Upload to TestPyPI first
-python3 -m twine upload --repository testpypi dist/*
-echo
-echo -n "Uploaded to TestPyPI. Ready to upload to PyPI? [press enter]"
+echo -n "Ready to upload to PyPI? [press enter]"
 read
 
 # Upload to PyPI

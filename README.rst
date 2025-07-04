@@ -12,7 +12,7 @@ INSTALLATION
 
 ::
 
-    $ pip install punt
+    $ uv tool install punt
 
 -----
 USAGE
