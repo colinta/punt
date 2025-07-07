@@ -1,13 +1,43 @@
 #!/usr/bin/env bash
 set -e
 
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RESET='\033[0m' # No Color
+
+if [[ -z $UV_PUBLISH_TOKEN ]]; then
+    echo -e "${RED}Error: UV_PUBLISH_TOKEN is not set${RESET}"
+    echo "Please set it to your PyPI token before running this script."
+    exit 1
+fi
+
+# Check if uv is installed
+if ! command -v uv &> /dev/null; then
+    echo -e "${RED}Error: uv is not installed${RESET}"
+    echo "Install it with: curl -LsSf https://astral.sh/uv/install.sh | sh"
+    exit 1
+fi
+
 # Clean previous builds
+echo -e "${YELLOW}Cleaning previous builds...${RESET}"
 rm -rf dist/ build/ *.egg-info
 
 # Build source distribution and wheel
-python3 -m build
-echo -n "Ready to upload to PyPI? [press enter]"
+echo -e "${YELLOW}Building package with uv...${RESET}"
+uv build
+
+# Show built files
+echo -e "${GREEN}Built distributions:${RESET}"
+ls -la dist/
+
+# Prompt for confirmation
+echo -ne "${YELLOW}Ready to upload to PyPI? [press enter to continue, Ctrl-C to cancel]${RESET} "
 read
 
 # Upload to PyPI
-python3 -m twine upload dist/*
+echo -e "${YELLOW}Uploading to PyPI...${RESET}"
+uv publish
+
+echo -e "${GREEN}✓ Package uploaded successfully!${RESET}"
