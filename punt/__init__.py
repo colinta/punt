@@ -1,4 +1,5 @@
-"""Punter.  Watches current path (or another path) for changes and executes
+"""Punt
+Watches current path (or another path) for changes and executes
 command(s) when a change is detected.  Uses watchdog to track file changes.
 
 Usage:
