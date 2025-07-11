@@ -21,6 +21,9 @@ import os
 import os.path
 import traceback
 import glob
+import termios
+import tty
+import select
 from subprocess import call, run
 
 from docopt import docopt
@@ -101,6 +104,11 @@ def main():
 
     class Regenerate(FileSystemEventHandler):
         last_run = None
+        is_running = False
+
+        def __init__(self):
+            self.old_settings = termios.tcgetattr(sys.stdin)
+            super().__init__()
 
         def on_any_event(self, event, alert=True):
             if self.last_run and time.time() - self.last_run < timeout:
@@ -108,15 +116,19 @@ def main():
             self.last_run = time.time()
 
             try:
+                self.is_running = True
                 if not keep:
                     sys.stderr.write("\033[2J\033[H\033[3J")
                     sys.stderr.flush()
 
                 # Display which file changed if info flag is active
-                if info and event is not None:
-                    file_path = event.src_path
-                    event_type = event.event_type
-                    sys.stderr.write(f"\x1B[36;2mFile {event_type}: {file_path}\x1B[0m\n")
+                if info and alert:
+                    if event is not None:
+                        file_path = event.src_path
+                        event_type = event.event_type
+                        sys.stderr.write(f"\x1B[36;2mFile {event_type}: {file_path}\x1B[0m\n")
+                    else:
+                        sys.stderr.write("\x1B[36;2mManual trigger: Enter key pressed\x1B[0m\n")
 
                 last_status = None
                 statuses = {}
@@ -126,8 +138,18 @@ def main():
                     if info:
                         sys.stderr.write("\x1B[34;2mRunning {0}\x1B[0m\n".format(desc))
 
+                    # Restore normal terminal mode for command execution
+                    if self.old_settings:
+                        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.old_settings)
+
                     last_status = command.run(shell)
                     statuses[command] = last_status
+
+                    # Re-enable raw mode for keyboard input
+                    if self.old_settings:
+                        os.set_blocking(sys.stdin.fileno(), False)
+
+                self.is_running = False
 
                 if info:
                     for command in commands:
@@ -135,6 +157,7 @@ def main():
                         write_status(status, command=command)
                     clock = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
                     sys.stderr.write(f"\x1B[33;2mat {clock}\x1B[0m\n")
+                    sys.stderr.write("\x1B[33;2mPress 'enter' to reload\x1B[0m\n")
 
             except OSError as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -144,20 +167,40 @@ def main():
                 sys.stderr.write("Error (%s): %s\n" % (type(e).__name__, e.message))
 
     observer = Observer()
-    handler = Regenerate()
+    handler = Regenerate()  # Will be updated with settings later
 
     for watch in watch_paths:
         observer.schedule(handler, path=watch, recursive=recursive)
     observer.start()
 
     try:
+        # Set stdin to non-blocking mode
+        os.set_blocking(sys.stdin.fileno(), False)
+        
         handler.on_any_event(None, False)  # run the first time, no alert
+
         while True:
-            time.sleep(1)
+            if handler.is_running:
+                time.sleep(0.5)
+                continue
+            # Check for keyboard input
+            if select.select([sys.stdin], [], [], 0)[0]:
+                key = sys.stdin.read(1)
+                if key == '\r' or key == '\n':  # Enter key
+                    handler.on_any_event(None, True)
+                elif key == '\x03':  # Ctrl+C
+                    raise KeyboardInterrupt
+                elif key == '\x1b':  # ESC key
+                    raise KeyboardInterrupt
+            
+            time.sleep(0.1)  # Shorter sleep for more responsive keyboard input
     except KeyboardInterrupt:
         if info:
-            sys.stderr.write("!!! Stopping\n")
+            sys.stderr.write("\x1b[31;2mStopping\x1b[0m\n")
         observer.stop()
+    finally:
+        # Restore terminal settings
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, handler.old_settings)
     observer.join()
 
 
